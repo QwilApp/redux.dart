@@ -162,7 +162,7 @@ class Store<State> {
   Store(
     this.reducer, {
     State initialState,
-    List<Middleware<State>> middleware = const <Middleware<State>>[],
+    List<Middleware<State>> middleware,
     bool syncStream: false,
 
     /// If set to true, the Store will not emit onChange events if the new State
@@ -177,7 +177,7 @@ class Store<State> {
         _changeController = controller ?? new StreamController<State>.broadcast(sync: syncStream) {
     _state = initialState;
     _dispatchers = _createDispatchers(
-      middleware,
+      middleware ?? <Middleware<State>>[],
       _createReduceAndNotify(distinct),
     );
   }
