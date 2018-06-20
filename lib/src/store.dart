@@ -162,7 +162,7 @@ class Store<State> {
   Store(
     this.reducer, {
     State initialState,
-    List<Middleware<State>> middleware = const [],
+    List<Middleware<State>> middleware = const <Middleware<State>>[],
     bool syncStream: false,
 
     /// If set to true, the Store will not emit onChange events if the new State
@@ -172,8 +172,9 @@ class Store<State> {
     /// Under the hood, it will use the `==` method from your State class to
     /// determine whether or not the two States are equal.
     bool distinct: false,
-  })
-      : _changeController = new StreamController.broadcast(sync: syncStream) {
+    StreamController<State> controller,
+  })  : assert(controller == null || controller.stream.isBroadcast),
+        _changeController = controller ?? new StreamController<State>.broadcast(sync: syncStream) {
     _state = initialState;
     _dispatchers = _createDispatchers(
       middleware,
@@ -215,7 +216,7 @@ class Store<State> {
   // the reducer, save the result, and notify any subscribers.
   NextDispatcher _createReduceAndNotify(bool distinct) {
     return (dynamic action) {
-      final state = reducer(_state, action);
+      final State state = reducer(_state, action);
 
       if (distinct && state == _state) return;
 
@@ -228,11 +229,11 @@ class Store<State> {
     List<Middleware<State>> middleware,
     NextDispatcher reduceAndNotify,
   ) {
-    final dispatchers = <NextDispatcher>[]..add(reduceAndNotify);
+    final List<NextDispatcher> dispatchers = <NextDispatcher>[]..add(reduceAndNotify);
 
     // Convert each [Middleware] into a [NextDispatcher]
-    for (var nextMiddleware in middleware.reversed) {
-      final next = dispatchers.last;
+    for (Middleware<State> nextMiddleware in middleware.reversed) {
+      final NextDispatcher next = dispatchers.last;
 
       dispatchers.add(
         (dynamic action) => nextMiddleware(this, action, next),
@@ -254,7 +255,7 @@ class Store<State> {
   /// if you want to destroy the Store while your app is running. Do not use
   /// this method as a way to stop listening to [onChange] state changes. For
   /// that purpose, view the [onChange] documentation.
-  Future teardown() async {
+  Future<dynamic> teardown() async {
     _state = null;
     return _changeController.close();
   }
