@@ -173,8 +173,7 @@ class Store<State> {
     /// determine whether or not the two States are equal.
     bool distinct: false,
     StreamController<State> controller,
-  })  : assert(controller == null || controller.stream.isBroadcast),
-        _changeController = controller ?? new StreamController<State>.broadcast(sync: syncStream) {
+  }) : _changeController = controller ?? new StreamController<State>.broadcast(sync: syncStream) {
     _state = initialState;
     _dispatchers = _createDispatchers(
       middleware ?? <Middleware<State>>[],
